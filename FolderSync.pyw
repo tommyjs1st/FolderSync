@@ -1,16 +1,15 @@
 import sys
-from sys import exit
 import os
 import time
 import datetime
 import shutil
+
+from threading import Thread
 from difflib import Differ
 from tkinter import *
 from tkinter import filedialog
-from threading import Thread
-import tkinter.ttk
 from tkinter import messagebox
-
+from tkinter import ttk
 
 class FolderSync(Thread):
 
@@ -31,27 +30,32 @@ class FolderSync(Thread):
             if modeVerbose and fileNo == 0: progressbar.start(50)
             elif modeVerbose and fileNo == 1: progressbar2.start(50)
 
-            f = open(configList[fileNo], 'r')
-            lines = f.readlines()
-            lineCnt = 0
-            srcFolders = []
-            for line in lines:
-                if lineCnt == 1:
-                    dstFolder = self.deleteEscChar(line)
-                elif lineCnt > 2:
-                    srcFolders.append(self.deleteEscChar(line))
-                lineCnt += 1
-            f.close()
+            try:
+                f = open(configList[fileNo], 'r')
+                lines = f.readlines()
+                lineCnt = 0
+                srcFolders = []
+                for line in lines:
+                    if lineCnt == 1:
+                        dstFolder = self.deleteEscChar(line)
+                    elif lineCnt > 2:
+                        srcFolders.append(self.deleteEscChar(line))
+                    lineCnt += 1
+                f.close()
         
-            if not os.path.exists(os.path.dirname(dstFolder)):
-                os.mkdir(os.path.dirname(dstFolder))
+                if not os.path.exists(os.path.dirname(dstFolder)):
+                    os.mkdir(os.path.dirname(dstFolder))
         
-            for srcFolder in srcFolders:
-                tarFolder = os.path.basename(srcFolder)
-                tarFolder = os.path.join(dstFolder, os.path.basename(srcFolder))
-                #fileLog(srcFolder + " >>>> " + tarFolder)
-                
-                self.folderSync(srcFolder, tarFolder)
+                for srcFolder in srcFolders:
+                    tarFolder = os.path.basename(srcFolder)
+                    tarFolder = os.path.join(dstFolder, os.path.basename(srcFolder))
+                    #fileLog(srcFolder + " >>>> " + tarFolder)
+
+                    #파일 비교 시작
+                    self.folderSync(srcFolder, tarFolder)
+
+            except Exception as e:
+                print('file open error!', e)
             
             if modeVerbose and fileNo == 0: progressbar.stop()
             elif modeVerbose and fileNo == 1: progressbar2.stop()
@@ -209,17 +213,21 @@ def saveConfig(tgt):
 def readConfig(configfile, listboxfr, listboxto):
     dstDirList = listboxto.get(0,'end')
     srcDirList = listboxfr.get(0,'end')
-    
-    f = open(configfile, 'r')
-    lines = f.readlines()
-    lineCnt = 0
-    for line in lines:        
-        if lineCnt == 1:
-            listboxto.insert(0, deleteEscChar(line))
-        elif lineCnt > 2:
-            listboxfr.insert(999, deleteEscChar(line))
-        lineCnt += 1
-    f.close()
+
+    try:
+        f = open(configfile, 'r')
+        lines = f.readlines()
+        lineCnt = 0
+        for line in lines:
+            if lineCnt == 1:
+                listboxto.insert(0, deleteEscChar(line))
+            elif lineCnt > 2:
+                listboxfr.insert(999, deleteEscChar(line))
+            lineCnt += 1
+        f.close()
+    except Exception as e:
+        print('file read error!', e)
+        
 
 def deleteEscChar(inStr):
     outStr = ''
@@ -304,7 +312,7 @@ if '-c' in args or '-C' in args:
     modeVerbose = False
           
     pgmStart_click()
-    exit()
+    sys.exit()
 
 
 win=Tk()
@@ -325,7 +333,7 @@ btnfrdel.pack(side= 'left', anchor='w', padx=5, pady = 5)
 btnto.pack(side= 'right', anchor='ne', padx=5, pady = 5)
 
 #진행표시
-progressbar=tkinter.ttk.Progressbar(framebtn, length=450, maximum=100, mode="indeterminate")
+progressbar=ttk.Progressbar(framebtn, length=450, maximum=100, mode="indeterminate")
 progressbar.pack(side='left')
 
 
@@ -367,7 +375,7 @@ btnfrdel2.pack(side= 'left', anchor='w', padx=5, pady = 5)
 btnto2.pack(side= 'right', anchor='ne', padx=5, pady = 5)
 
 #진행표시
-progressbar2=tkinter.ttk.Progressbar(framebtn2, length=450, maximum=100, mode="indeterminate")
+progressbar2=ttk.Progressbar(framebtn2, length=450, maximum=100, mode="indeterminate")
 progressbar2.pack(side='left')
 framebtn2.pack()
 
