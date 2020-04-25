@@ -122,15 +122,20 @@ class FolderSync(Thread):
     def folderSync(self, srcFolder, dstFolder):
 
         global cntDelete, cntUpdate, fileListOld, fileListNew
-    
-        # 00. 대상폴더 생성 및 위치로 이동
-        if not os.path.exists(os.path.dirname(fileListOld)):
-            os.mkdir(os.path.dirname(fileListOld))
+
+        try:
+            # 00. 대상폴더 생성 및 위치로 이동
+            if not os.path.exists(os.path.dirname(fileListOld)):
+                os.mkdir(os.path.dirname(fileListOld))
    
-        if not os.path.exists(dstFolder):
-            #print(dstFolder + " not found.")
-            os.mkdir(dstFolder)
-        os.chdir(dstFolder)
+            if not os.path.exists(dstFolder):
+                #print(dstFolder + " not found.")
+                os.mkdir(dstFolder)
+            os.chdir(dstFolder)
+        except Exception as e:
+            print('file read error!', e)
+            self.fileLog(e)
+            return
 
         #01.현재 폴더구조를 파일로 저장
         self.saveList(srcFolder, fileListNew, 'D')
